@@ -125,6 +125,4 @@ FROM survey_responses
 GROUP BY viewing_frequency;
 ```
 
-4. **Scroll bawah, commit message:**
-```
    Add database setup and schema queries
