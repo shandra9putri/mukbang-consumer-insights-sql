@@ -1,0 +1,63 @@
+# Data Dictionary
+
+## Survey Data Structure
+
+### Table: survey_responses
+
+| Column Name | Data Type | Description | Values |
+|-------------|-----------|-------------|---------|
+| respondent_id | INTEGER | Unique identifier for each respondent | 1-100 |
+| age_group | TEXT | Respondent age range | '18-24', '25-34', '35+' |
+| gender | TEXT | Gender identity | 'Male', 'Female' |
+| viewing_frequency | TEXT | How often watches mukbang videos | 'Daily', 'Weekly', 'Monthly', 'Rarely' |
+| follows_tzuyang | TEXT | Follows Tzuyang on social media | 'Yes', 'No' |
+| credibility_trustworthy | INTEGER | Perceived trustworthiness (Ohanian, 1990) | 1-5 Likert scale |
+| credibility_honest | INTEGER | Perceived honesty | 1-5 Likert scale |
+| credibility_knowledgeable | INTEGER | Perceived expertise about food | 1-5 Likert scale |
+| credibility_authentic | INTEGER | Perceived authenticity | 1-5 Likert scale |
+| credibility_persuasive | INTEGER | Perceived persuasiveness | 1-5 Likert scale |
+| brand_recall | INTEGER | Can recall brands from videos (Keller, 1993) | 1-5 Likert scale |
+| brand_interest | INTEGER | Interest in trying featured brands | 1-5 Likert scale |
+| brand_search_online | INTEGER | Searched brand online after watching | 1-5 Likert scale |
+| brand_quality_perception | INTEGER | Perceived quality of featured brands | 1-5 Likert scale |
+| brand_reputation_influence | INTEGER | Video influenced brand perception | 1-5 Likert scale |
+| has_purchased | TEXT | Made purchase after watching mukbang | 'Yes', 'No' |
+| purchase_intention | INTEGER | Likelihood to purchase featured brands | 1-5 Likert scale |
+| brand_loyalty | INTEGER | Would choose brand over competitors | 1-5 Likert scale |
+
+## Calculated Metrics
+
+When analyzing this data with SQL, we create:
+
+- **avg_credibility_score**: Average of 5 credibility dimensions (trustworthy, honest, knowledgeable, authentic, persuasive)
+- **avg_brand_equity_score**: Average of 5 brand equity dimensions (recall, interest, search, quality, reputation)
+- **conversion_rate**: Percentage of respondents who actually purchased (has_purchased = 'Yes')
+
+## Research Framework
+
+This dataset is structured based on established marketing research frameworks:
+
+- **Ohanian (1990) Source Credibility Model**: Measures influencer credibility across three core dimensions - expertise, trustworthiness, and attractiveness
+- **Keller (1993) Consumer-Based Brand Equity**: Measures brand equity through awareness, associations, perceived quality, and loyalty
+
+## Data Quality Notes
+
+- All responses are on a 5-point Likert scale where: 1 = Strongly Disagree, 5 = Strongly Agree
+- Sample size: n = 100 respondents
+- Data is anonymized for privacy compliance
+- Geographic focus: Young consumers (18-34) in South Korea
+- Collection period: Represents cross-sectional snapshot
+
+## Usage in SQL Analysis
+
+This data is used to test four research hypotheses:
+
+- **H1**: Influencer credibility positively affects consumer trust
+- **H2**: Consumer trust mediates the relationship between credibility and engagement
+- **H3**: Mukbang influencer marketing positively influences brand perception and equity
+- **H4**: Consumer engagement with mukbang content positively influences purchase intention
+```
+
+5. **Scroll bawah ke "Commit message", ketik:**
+```
+   Add data dictionary
