@@ -1,0 +1,170 @@
+
+-- BRAND PERCEPTION & BRAND EQUITY ANALYSIS
+
+-- Research Hypothesis Tested:
+-- H3: Mukbang influencer marketing positively influences brand perception and brand equity
+-- Framework: Keller (1993) Consumer-Based Brand Equity Model
+
+-- Query 1: Brand Equity Components Analysis
+
+-- Breaks down brand equity across 5 dimensions
+-- Identifies which components are strongest/weakest
+
+SELECT 
+    'Brand Recall' AS equity_component,
+    ROUND(AVG(brand_recall), 2) AS avg_score,
+    COUNT(CASE WHEN brand_recall >= 4 THEN 1 END) AS high_score_count,
+    ROUND(COUNT(CASE WHEN brand_recall >= 4 THEN 1 END) * 100.0 / COUNT(*), 1) AS high_score_pct
+FROM survey_responses
+
+UNION ALL
+
+SELECT 
+    'Brand Interest',
+    ROUND(AVG(brand_interest), 2),
+    COUNT(CASE WHEN brand_interest >= 4 THEN 1 END),
+    ROUND(COUNT(CASE WHEN brand_interest >= 4 THEN 1 END) * 100.0 / COUNT(*), 1)
+FROM survey_responses
+
+UNION ALL
+
+SELECT 
+    'Online Search Behavior',
+    ROUND(AVG(brand_search_online), 2),
+    COUNT(CASE WHEN brand_search_online >= 4 THEN 1 END),
+    ROUND(COUNT(CASE WHEN brand_search_online >= 4 THEN 1 END) * 100.0 / COUNT(*), 1)
+FROM survey_responses
+
+UNION ALL
+
+SELECT 
+    'Quality Perception',
+    ROUND(AVG(brand_quality_perception), 2),
+    COUNT(CASE WHEN brand_quality_perception >= 4 THEN 1 END),
+    ROUND(COUNT(CASE WHEN brand_quality_perception >= 4 THEN 1 END) * 100.0 / COUNT(*), 1)
+FROM survey_responses
+
+UNION ALL
+
+SELECT 
+    'Reputation Influence',
+    ROUND(AVG(brand_reputation_influence), 2),
+    COUNT(CASE WHEN brand_reputation_influence >= 4 THEN 1 END),
+    ROUND(COUNT(CASE WHEN brand_reputation_influence >= 4 THEN 1 END) * 100.0 / COUNT(*), 1)
+FROM survey_responses;
+
+
+-- Query 2: H3 Hypothesis Testing - Brand Equity by Viewing Frequency
+
+-- Tests if mukbang exposure (viewing frequency) correlates with higher brand equity
+-- KEY FINDING: Expected to show Daily viewers have significantly higher brand equity
+
+SELECT 
+    viewing_frequency,
+    COUNT(*) AS respondents,
+    ROUND(AVG((brand_recall + brand_interest + brand_search_online + 
+               brand_quality_perception + brand_reputation_influence) / 5.0), 2) AS avg_brand_equity,
+    ROUND(AVG(brand_recall), 2) AS avg_recall,
+    ROUND(AVG(brand_quality_perception), 2) AS avg_quality_perception,
+    ROUND(AVG(brand_reputation_influence), 2) AS avg_reputation_score
+FROM survey_responses
+GROUP BY viewing_frequency
+ORDER BY 
+    CASE viewing_frequency
+        WHEN 'Daily' THEN 1
+        WHEN 'Weekly' THEN 2
+        WHEN 'Monthly' THEN 3
+        WHEN 'Rarely' THEN 4
+    END;
+
+
+-- Query 3: Impact of Mukbang on Brand Awareness
+
+-- Compares brand recall between Tzuyang followers vs non-followers
+-- Measures awareness-building effectiveness of mukbang marketing
+
+SELECT 
+    follows_tzuyang,
+    viewing_frequency,
+    COUNT(*) AS respondents,
+    ROUND(AVG(brand_recall), 2) AS avg_brand_recall,
+    ROUND(AVG(brand_interest), 2) AS avg_brand_interest,
+    COUNT(CASE WHEN brand_search_online >= 4 THEN 1 END) AS active_searchers,
+    ROUND(COUNT(CASE WHEN brand_search_online >= 4 THEN 1 END) * 100.0 / COUNT(*), 1) AS search_rate_pct
+FROM survey_responses
+GROUP BY follows_tzuyang, viewing_frequency
+ORDER BY follows_tzuyang, viewing_frequency;
+
+
+-- Query 4: Brand Equity Score Distribution
+
+-- Segments respondents by overall brand equity perception
+-- Shows distribution across High/Medium/Low brand equity
+
+SELECT 
+    CASE 
+        WHEN brand_equity >= 4.0 THEN 'High Brand Equity (4-5)'
+        WHEN brand_equity >= 3.0 THEN 'Medium Brand Equity (3-4)'
+        ELSE 'Low Brand Equity (1-3)'
+    END AS brand_equity_level,
+    COUNT(*) AS respondents,
+    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM survey_responses), 1) AS percentage,
+    ROUND(AVG(purchase_intention), 2) AS avg_purchase_intent,
+    COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) AS actual_purchasers
+FROM (
+    SELECT 
+        (brand_recall + brand_interest + brand_search_online + 
+         brand_quality_perception + brand_reputation_influence) / 5.0 AS brand_equity,
+        purchase_intention,
+        has_purchased
+    FROM survey_responses
+) AS equity_calc
+GROUP BY brand_equity_level
+ORDER BY brand_equity_level;
+
+
+-- Query 5: Age Group Differences in Brand Perception
+
+-- Tests if brand equity varies significantly across age segments
+-- Important for targeting decisions
+
+SELECT 
+    age_group,
+    COUNT(*) AS respondents,
+    ROUND(AVG((brand_recall + brand_interest + brand_search_online + 
+               brand_quality_perception + brand_reputation_influence) / 5.0), 2) AS avg_brand_equity,
+    ROUND(AVG(brand_recall), 2) AS avg_awareness,
+    ROUND(AVG(brand_quality_perception), 2) AS avg_perceived_quality,
+    ROUND(AVG(brand_loyalty), 2) AS avg_loyalty
+FROM survey_responses
+GROUP BY age_group
+ORDER BY age_group;
+
+
+-- Query 6: Correlation Between Credibility and Brand Equity
+
+-- Examines if influencer credibility drives brand equity perceptions
+-- Links H1 (credibility → trust) with H3 (mukbang → brand equity)
+
+SELECT 
+    CASE 
+        WHEN credibility >= 4.0 THEN 'High Credibility'
+        WHEN credibility >= 3.0 THEN 'Medium Credibility'
+        ELSE 'Low Credibility'
+    END AS credibility_level,
+    COUNT(*) AS respondents,
+    ROUND(AVG(brand_equity), 2) AS avg_brand_equity,
+    ROUND(AVG(brand_recall), 2) AS avg_recall,
+    ROUND(AVG(brand_quality_perception), 2) AS avg_quality
+FROM (
+    SELECT 
+        (credibility_trustworthy + credibility_honest + credibility_knowledgeable + 
+         credibility_authentic + credibility_persuasive) / 5.0 AS credibility,
+        (brand_recall + brand_interest + brand_search_online + 
+         brand_quality_perception + brand_reputation_influence) / 5.0 AS brand_equity,
+        brand_recall,
+        brand_quality_perception
+    FROM survey_responses
+) AS cred_equity
+GROUP BY credibility_level
+ORDER BY credibility_level;
