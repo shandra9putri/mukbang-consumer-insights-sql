@@ -1,0 +1,195 @@
+
+-- PURCHASE BEHAVIOR & INTENTION ANALYSIS
+
+-- Research Hypothesis Tested:
+-- H4: Consumer engagement with mukbang influencers positively influences purchase intention
+-- Business Value: Measures ROI of mukbang influencer marketing
+
+
+-- Query 1: Purchase Conversion Analysis
+
+-- Compares actual purchasers vs non-purchasers
+-- Key metric: Overall conversion rate from mukbang exposure
+
+SELECT 
+    has_purchased,
+    COUNT(*) AS respondent_count,
+    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM survey_responses), 1) AS percentage,
+    ROUND(AVG(viewing_frequency_numeric), 2) AS avg_viewing_frequency,
+    ROUND(AVG(purchase_intention), 2) AS avg_purchase_intent,
+    ROUND(AVG(brand_loyalty), 2) AS avg_brand_loyalty,
+    ROUND(AVG((credibility_trustworthy + credibility_honest + credibility_knowledgeable + 
+               credibility_authentic + credibility_persuasive) / 5.0), 2) AS avg_credibility
+FROM (
+    SELECT 
+        has_purchased,
+        purchase_intention,
+        brand_loyalty,
+        credibility_trustworthy,
+        credibility_honest,
+        credibility_knowledgeable,
+        credibility_authentic,
+        credibility_persuasive,
+        CASE viewing_frequency
+            WHEN 'Daily' THEN 4
+            WHEN 'Weekly' THEN 3
+            WHEN 'Monthly' THEN 2
+            WHEN 'Rarely' THEN 1
+        END AS viewing_frequency_numeric
+    FROM survey_responses
+) AS purchase_data
+GROUP BY has_purchased;
+
+
+-- Query 2: Purchase Funnel Analysis
+
+-- Tracks consumer journey from awareness → purchase
+-- Identifies drop-off points in the conversion funnel
+
+SELECT 
+    'Step 1: Brand Awareness' AS funnel_stage,
+    COUNT(CASE WHEN brand_recall >= 3 THEN 1 END) AS respondents,
+    ROUND(COUNT(CASE WHEN brand_recall >= 3 THEN 1 END) * 100.0 / COUNT(*), 1) AS percentage,
+    ROUND(COUNT(CASE WHEN brand_recall >= 3 THEN 1 END) * 100.0 / COUNT(*), 1) AS funnel_retention
+FROM survey_responses
+
+UNION ALL
+
+SELECT 
+    'Step 2: Brand Interest',
+    COUNT(CASE WHEN brand_interest >= 3 THEN 1 END),
+    ROUND(COUNT(CASE WHEN brand_interest >= 3 THEN 1 END) * 100.0 / COUNT(*), 1),
+    ROUND(COUNT(CASE WHEN brand_interest >= 3 THEN 1 END) * 100.0 / 
+          COUNT(CASE WHEN brand_recall >= 3 THEN 1 END), 1)
+FROM survey_responses
+
+UNION ALL
+
+SELECT 
+    'Step 3: Active Search',
+    COUNT(CASE WHEN brand_search_online >= 3 THEN 1 END),
+    ROUND(COUNT(CASE WHEN brand_search_online >= 3 THEN 1 END) * 100.0 / COUNT(*), 1),
+    ROUND(COUNT(CASE WHEN brand_search_online >= 3 THEN 1 END) * 100.0 / 
+          COUNT(CASE WHEN brand_interest >= 3 THEN 1 END), 1)
+FROM survey_responses
+
+UNION ALL
+
+SELECT 
+    'Step 4: Purchase Intent',
+    COUNT(CASE WHEN purchase_intention >= 3 THEN 1 END),
+    ROUND(COUNT(CASE WHEN purchase_intention >= 3 THEN 1 END) * 100.0 / COUNT(*), 1),
+    ROUND(COUNT(CASE WHEN purchase_intention >= 3 THEN 1 END) * 100.0 / 
+          COUNT(CASE WHEN brand_search_online >= 3 THEN 1 END), 1)
+FROM survey_responses
+
+UNION ALL
+
+SELECT 
+    'Step 5: Actual Purchase',
+    COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END),
+    ROUND(COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) * 100.0 / COUNT(*), 1),
+    ROUND(COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) * 100.0 / 
+          COUNT(CASE WHEN purchase_intention >= 3 THEN 1 END), 1)
+FROM survey_responses;
+
+
+-- Query 3: H4 Hypothesis Testing - Engagement → Purchase
+
+-- Tests if viewing frequency (engagement) correlates with purchase behavior
+-- KEY FINDING: Expected to show Daily viewers have highest conversion rate
+
+SELECT 
+    CASE 
+        WHEN viewing_frequency = 'Daily' THEN 'High Engagement'
+        WHEN viewing_frequency IN ('Weekly', 'Monthly') THEN 'Medium Engagement'
+        ELSE 'Low Engagement'
+    END AS engagement_level,
+    COUNT(*) AS respondents,
+    ROUND(AVG(purchase_intention), 2) AS avg_purchase_intent,
+    COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) AS actual_purchasers,
+    ROUND(COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) * 100.0 / COUNT(*), 1) AS conversion_rate,
+    ROUND(AVG(brand_loyalty), 2) AS avg_loyalty,
+    ROUND(AVG((brand_recall + brand_interest + brand_search_online + 
+               brand_quality_perception + brand_reputation_influence) / 5.0), 2) AS avg_brand_equity
+FROM survey_responses
+GROUP BY engagement_level
+ORDER BY 
+    CASE engagement_level
+        WHEN 'High Engagement' THEN 1
+        WHEN 'Medium Engagement' THEN 2
+        ELSE 3
+    END;
+
+
+-- Query 4: Age Group Purchase Patterns
+
+-- Identifies which demographics have highest purchase conversion
+-- Critical for ROI calculation and targeting
+
+SELECT 
+    age_group,
+    gender,
+    COUNT(*) AS total_respondents,
+    COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) AS purchasers,
+    ROUND(AVG(purchase_intention), 2) AS avg_intent,
+    ROUND(COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) * 100.0 / COUNT(*), 1) AS conversion_rate,
+    ROUND(AVG(brand_loyalty), 2) AS avg_loyalty
+FROM survey_responses
+GROUP BY age_group, gender
+ORDER BY age_group, gender;
+
+
+-- Query 5: Purchase Intention Score Distribution
+
+-- Shows spread of purchase intention across 1-5 scale
+-- Helps predict future purchase behavior
+
+SELECT 
+    purchase_intention AS intent_score,
+    COUNT(*) AS respondents,
+    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM survey_responses), 1) AS percentage,
+    COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) AS actual_purchasers,
+    ROUND(COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) * 100.0 / COUNT(*), 1) AS actual_conversion_rate
+FROM survey_responses
+GROUP BY purchase_intention
+ORDER BY purchase_intention DESC;
+
+
+-- Query 6: Brand Loyalty Among Purchasers
+
+-- Examines if mukbang-driven purchases lead to brand loyalty
+-- Tests long-term value of mukbang marketing
+
+SELECT 
+    has_purchased,
+    CASE 
+        WHEN brand_loyalty >= 4 THEN 'High Loyalty (4-5)'
+        WHEN brand_loyalty >= 3 THEN 'Medium Loyalty (3-4)'
+        ELSE 'Low Loyalty (1-3)'
+    END AS loyalty_level,
+    COUNT(*) AS respondents,
+    ROUND(AVG(purchase_intention), 2) AS avg_purchase_intent,
+    ROUND(AVG((brand_recall + brand_interest + brand_search_online + 
+               brand_quality_perception + brand_reputation_influence) / 5.0), 2) AS avg_brand_equity
+FROM survey_responses
+GROUP BY has_purchased, loyalty_level
+ORDER BY has_purchased, loyalty_level;
+
+
+-- Query 7: ROI Indicator - Follower vs Non-Follower Conversion
+
+-- Compares conversion rates between Tzuyang followers vs non-followers
+-- Helps estimate direct ROI of influencer partnership
+
+SELECT 
+    follows_tzuyang,
+    COUNT(*) AS total_respondents,
+    COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) AS purchasers,
+    ROUND(COUNT(CASE WHEN has_purchased = 'Yes' THEN 1 END) * 100.0 / COUNT(*), 1) AS conversion_rate,
+    ROUND(AVG(purchase_intention), 2) AS avg_purchase_intent,
+    ROUND(AVG(brand_loyalty), 2) AS avg_brand_loyalty,
+    ROUND(AVG((credibility_trustworthy + credibility_honest + credibility_knowledgeable + 
+               credibility_authentic + credibility_persuasive) / 5.0), 2) AS avg_credibility
+FROM survey_responses
+GROUP BY follows_tzuyang;
