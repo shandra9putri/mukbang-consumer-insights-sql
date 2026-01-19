@@ -1,0 +1,38 @@
+-- ================================================
+-- HYPOTHESIS TESTING SUMMARY
+-- ================================================
+-- Tests all 4 research hypotheses from conceptual framework
+-- Provides definitive results for research conclusions
+
+-- ================================================
+-- H1: Influencer Credibility → Consumer Trust
+-- ================================================
+-- Tests if high credibility correlates with higher trust indicators
+-- Trust measured through: quality perception, reputation influence
+
+SELECT 
+    'H1: Credibility → Trust' AS hypothesis,
+    CASE 
+        WHEN AVG(CASE WHEN credibility_score >= 4 THEN brand_quality_perception END) > 
+             AVG(CASE WHEN credibility_score < 3 THEN brand_quality_perception END)
+        THEN 'SUPPORTED ✓'
+        ELSE 'NOT SUPPORTED ✗'
+    END AS result,
+    ROUND(AVG(CASE WHEN credibility_score >= 4 THEN brand_quality_perception END), 2) AS high_cred_trust,
+    ROUND(AVG(CASE WHEN credibility_score < 3 THEN brand_quality_perception END), 2) AS low_cred_trust,
+    ROUND(AVG(CASE WHEN credibility_score >= 4 THEN brand_quality_perception END) - 
+    ROUND(AVG(CASE WHEN credibility_score < 3 THEN brand_quality_perception END), 2) AS difference, 'Higher credibility leads to higher perceived quality/trust' AS interpretation
+
+FROM (SELECT(credibility_trustworthy + credibility_honest + credibility_knowledgeable + credibility_authentic + credibility_persuasive)/5.0 AS credibility_score,brand_quality_perception
+FROM survey_response) AS h1_test
+
+UNION ALL
+
+-- H2: Trust Mediates Credibility -> Engagement
+-- Tests if trust (quality perception) drives engagement (brand interest)
+
+SELECT
+    'H2: Trust -> Engagement' AS hypothesis,
+    CASE
+        When AVG ...
+
